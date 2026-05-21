@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForexSim Pro — Campaign & Arena Design Document</title>
+<style>
+  :root {
+    --navy: #0a0f1e;
+    --navy2: #111827;
+    --navy3: #1a2235;
+    --card: #161e30;
+    --card2: #1e2a40;
+    --accent: #00d4ff;
+    --accent2: #00ff9d;
+    --accent3: #ff6b35;
+    --accent4: #ffd700;
+    --text: #e8edf5;
+    --muted: #8899bb;
+    --border: rgba(0,212,255,0.15);
+    --border2: rgba(255,255,255,0.06);
+    --red: #ff4d4d;
+    --green: #00ff9d;
+    --amber: #ffd700;
+    --font-mono: 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'Georgia', serif;
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,15,30,0.97);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; gap: 0;
+    height: 52px;
+    backdrop-filter: blur(12px);
+  }
+  .logo {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: auto;
+    flex-shrink: 0;
+  }
+  .nav-tabs {
+    display: flex; gap: 0;
+    list-style: none;
+  }
+  .nav-tabs li a {
+    display: block;
+    padding: 0 1.1rem;
+    height: 52px;
+    line-height: 52px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+  .nav-tabs li a:hover, .nav-tabs li a.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* SECTIONS */
+  .section {
+    display: none;
+    padding: 2.5rem 2rem 4rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    animation: fadeIn 0.3s ease;
+  }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* HERO */
+  .doc-header {
+    border-bottom: 1px solid var(--border2);
+    padding-bottom: 2rem;
+    margin-bottom: 2.5rem;
+  }
+  .doc-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+  .doc-title {
+    font-size: 2rem;
+    font-weight: normal;
+    color: #fff;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin-bottom: 0.75rem;
+  }
+  .doc-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    display: flex; gap: 2rem; flex-wrap: wrap;
+  }
+  .doc-meta span { color: var(--accent2); }
+
+  /* LEVEL CARDS */
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  .level-card {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .level-card:hover { border-color: var(--border); transform: translateY(-2px); }
+  .level-card.active { border-color: var(--accent); }
+  .level-header {
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--border2);
+    display: flex; align-items: flex-start; gap: 0.75rem;
+  }
+  .level-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+  .level-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+  }
+  .level-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+    font-family: var(--font-mono);
+  }
+  .level-tags {
+    padding: 0.75rem 1.25rem;
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid;
+  }
+  .tag-blue { color: var(--accent); border-color: rgba(0,212,255,0.3); background: rgba(0,212,255,0.06); }
+  .tag-green { color: var(--accent2); border-color: rgba(0,255,157,0.3); background: rgba(0,255,157,0.06); }
+  .tag-amber { color: var(--amber); border-color: rgba(255,215,0,0.3); background: rgba(255,215,0,0.06); }
+  .tag-red { color: var(--red); border-color: rgba(255,77,77,0.3); background: rgba(255,77,77,0.06); }
+  .tag-orange { color: var(--accent3); border-color: rgba(255,107,53,0.3); background: rgba(255,107,53,0.06); }
+
+  /* LEVEL DETAIL */
+  .level-detail {
+    display: none;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+  }
+  .level-detail.active { display: block; }
+  .detail-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border2);
+    overflow-x: auto;
+  }
+  .detail-tab {
+    padding: 0.6rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+  }
+  .detail-tab:hover, .detail-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .detail-panel { display: none; padding: 1.5rem; }
+  .detail-panel.active { display: block; }
+
+  /* CONTENT ELEMENTS */
+  h3 {
+    font-size: 13px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    margin-top: 1.25rem;
+  }
+  h3:first-child { margin-top: 0; }
+
+  p { color: var(--text); font-size: 14px; margin-bottom: 0.75rem; line-height: 1.7; }
+
+  .objective-list, .concept-list, .challenge-list {
+    list-style: none;
+    margin-bottom: 1rem;
+  }
+  .objective-list li, .concept-list li, .challenge-list li {
+    font-size: 14px;
+    color: var(--text);
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border2);
+    padding-left: 1.25rem;
+    position: relative;
+  }
+  .objective-list li:before { content: '→'; position: absolute; left: 0; color: var(--accent2); }
+  .concept-list li:before { content: '◆'; position: absolute; left: 0; color: var(--accent); font-size: 8px; top: 0.7rem; }
+  .challenge-list li:before { content: '▶'; position: absolute; left: 0; color: var(--accent3); font-size: 9px; top: 0.65rem; }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-bottom: 1rem;
+  }
+  .data-table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    background: var(--card2);
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+  }
+  .data-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border2);
+    color: var(--text);
+    vertical-align: top;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .val-pos { color: var(--green); }
+  .val-neg { color: var(--red); }
+  .val-neutral { color: var(--amber); }
+
+  .callout {
+    border-left: 3px solid var(--accent3);
+    background: rgba(255,107,53,0.07);
+    padding: 0.75rem 1rem;
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 1rem;
+    font-size: 13px;
+  }
+  .callout.info { border-color: var(--accent); background: rgba(0,212,255,0.07); }
+  .callout.danger { border-color: var(--red); background: rgba(255,77,77,0.07); }
+  .callout.success { border-color: var(--green); background: rgba(0,255,157,0.07); }
+
+  .callout-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 0.25rem;
+  }
+  .callout.info .callout-label { color: var(--accent); }
+  .callout.danger .callout-label { color: var(--red); }
+  .callout.success .callout-label { color: var(--green); }
+
+  .reward-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .reward-item {
+    background: var(--card2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 0.75rem;
+    text-align: center;
+  }
+  .reward-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.25rem;
+    display: block;
+  }
+  .reward-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.2rem;
+  }
+  .reward-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--amber);
+    font-weight: bold;
+  }
+
+  /* ARENA */
+  .tier-track {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border2);
+  }
+  .tier-item {
+    flex: 1;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    border-right: 1px solid var(--border2);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .tier-item:last-child { border-right: none; }
+  .tier-item:hover, .tier-item.active { background: var(--card2); }
+  .tier-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: bold;
+    margin-bottom: 0.2rem;
+  }
+  .tier-elo {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .tier-detail-panel { display: none; }
+  .tier-detail-panel.active { display: block; }
+
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border2);
+  }
+  .score-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    width: 180px;
+    flex-shrink: 0;
+  }
+  .score-bar-wrap {
+    flex: 1;
+    background: var(--card2);
+    border-radius: 3px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .score-bar { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+  .score-weight {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--amber);
+    width: 50px;
+    text-align: right;
+  }
+
+  /* SANDBOX */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .feature-card {
+    background: var(--card2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 1rem;
+    transition: border-color 0.2s;
+  }
+  .feature-card:hover { border-color: var(--border); }
+  .feature-icon {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  .feature-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+  .feature-desc {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .skill-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent2);
+    border: 1px solid rgba(0,255,157,0.2);
+    background: rgba(0,255,157,0.05);
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-top: 0.4rem;
+    margin-right: 4px;
+  }
+
+  /* SCENARIOS */
+  .scenario-selector {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .scen-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--border2);
+    background: var(--card);
+    color: var(--muted);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .scen-btn:hover, .scen-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,212,255,0.07);
+  }
+  .scenario-panel { display: none; }
+  .scenario-panel.active { display: block; }
+
+  .market-data {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    margin-bottom: 1rem;
+  }
+  .market-data-row {
+    display: flex; gap: 2rem; flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+  .market-data-row:last-child { margin-bottom: 0; }
+  .mdr-label { color: var(--muted); font-size: 11px; display: block; }
+  .mdr-val { font-size: 14px; }
+
+  .outcome-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .outcome-card {
+    background: var(--card2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 0.85rem;
+  }
+  .outcome-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 0.4rem;
+  }
+  .outcome-desc {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* PROGRESS BAR */
+  .diff-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .diff-label { color: var(--muted); width: 70px; }
+  .diff-track {
+    flex: 1; height: 4px;
+    background: var(--card2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .diff-fill { height: 100%; border-radius: 2px; }
+
+  /* SECTION HEADERS */
+  .section-h2 {
+    font-size: 1.3rem;
+    font-weight: normal;
+    color: #fff;
+    margin: 2rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border2);
+    font-family: 'Georgia', serif;
+  }
+  .section-h2:first-of-type { margin-top: 0; }
+
+  .progress-indicator {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 2rem;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .prog-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .prog-line { flex: 1; height: 1px; background: var(--border2); }
+
+  /* SCORING COMPONENT */
+  .formula-box {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    margin-bottom: 1rem;
+    color: var(--accent);
+  }
+  .formula-box .comment { color: var(--muted); font-size: 11px; }
+
+  .toggle-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 0.75rem;
+    display: inline-block;
+  }
+  .toggle-btn:hover { background: rgba(0,212,255,0.08); }
+
+  .collapsible-body {
+    display: none;
+    margin-top: 0.75rem;
+  }
+  .collapsible-body.open { display: block; }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border2);
+    letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="logo">ForexSim Pro // Design Doc v1.0</div>
+  <ul class="nav-tabs">
+    <li><a href="#" class="active" data-section="campaign">Campaign Mode</a></li>
+    <li><a href="#" data-section="arena">Arena Mode</a></li>
+    <li><a href="#" data-section="sandbox">Sandbox Mode</a></li>
+    <li><a href="#" data-section="scenarios">Scenarios</a></li>
+  </ul>
+</nav>
+
+<!-- ===================== CAMPAIGN MODE ===================== -->
+<div id="campaign" class="section active">
+  <div class="doc-header">
+    <div class="doc-label">Product Design Document · Section 1 of 4</div>
+    <h1 class="doc-title">Campaign Mode Design Document</h1>
+    <div class="doc-meta">
+      Platform: ForexSim Pro &nbsp;·&nbsp; Version: 1.0 &nbsp;·&nbsp; Classification: Internal &nbsp;·&nbsp; Status: <span>Draft</span>
+    </div>
+  </div>
+
+  <div class="progress-indicator">
+    <div class="prog-dot" style="background:var(--green)"></div><div class="prog-line"></div>
+    <div class="prog-dot" style="background:var(--green)"></div><div class="prog-line"></div>
+    <div class="prog-dot" style="background:var(--accent)"></div><div class="prog-line"></div>
+    <div class="prog-dot" style="background:var(--border2)"></div><div class="prog-line"></div>
+    <div class="prog-dot" style="background:var(--border2)"></div><div class="prog-line"></div>
+    <div class="prog-dot" style="background:var(--border2)"></div>
+    <span style="margin-left:0.5rem; color:var(--muted)">Select a level below</span>
+  </div>
+
+  <div class="level-grid" id="levelGrid"></div>
+  <div id="levelDetail"></div>
+</div>
+
+<!-- ===================== ARENA MODE ===================== -->
+<div id="arena" class="section">
+  <div class="doc-header">
+    <div class="doc-label">Product Design Document · Section 2 of 4</div>
+    <h1 class="doc-title">Arena Mode Competition Framework</h1>
+    <div class="doc-meta">
+      Module: Multiplayer &nbsp;·&nbsp; Status: <span>Spec Complete</span>
+    </div>
+  </div>
+
+  <p style="font-size:14px; max-width:720px; margin-bottom:2rem;">Arena Mode is a structured competitive layer where users engage in real-time and asynchronous forex news trading simulations against peers globally. It applies game-theory pressure, ranking mechanics, and performance-adjusted scoring to replicate institutional trading competition dynamics — turning passive learning into high-stakes, measurable skill validation.</p>
+
+  <h2 class="section-h2">Competition Types</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <span class="feature-icon">📅</span>
+      <div class="feature-name">Weekly Themed Challenges</div>
+      <p class="feature-desc">Single macroeconomic theme per week (e.g. "Central Bank Week"). All participants face the same synthetic news environment. Rankings reset weekly. Top 20% earn promotion points.</p>
+      <span class="skill-tag">Asynchronous</span><span class="skill-tag">PvE</span>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⚔</span>
+      <div class="feature-name">Head-to-Head Matches</div>
+      <p class="feature-desc">Two players receive identical news scenarios simultaneously. First to hit +3% portfolio return without exceeding 5% drawdown wins. 10-minute time cap with live P&L streaming.</p>
+      <span class="skill-tag">Real-time PvP</span><span class="skill-tag">Elo-rated</span>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🏢</span>
+      <div class="feature-name">Team Trading Desks</div>
+      <p class="feature-desc">Teams of 3–5 players split roles: analyst, execution, risk manager. Team score = sum of individual risk-adjusted returns. Roles rotate each round to ensure skill breadth.</p>
+      <span class="skill-tag">Collaborative</span><span class="skill-tag">Asynchronous</span>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🌍</span>
+      <div class="feature-name">Global Tournaments</div>
+      <p class="feature-desc">Monthly 3-round eliminations. Bracket of 256 players. Each round introduces increased news complexity. Final round: multi-event simultaneous trading (NFP + FOMC overlap).</p>
+      <span class="skill-tag">Seasonal</span><span class="skill-tag">Prize Pool</span>
+    </div>
+  </div>
+
+  <h2 class="section-h2">Scoring System</h2>
+  <p style="font-size:14px; margin-bottom:1rem;">Total score is a weighted composite of five performance dimensions:</p>
+  <div id="scoringBars"></div>
+
+  <div class="formula-box" style="margin-top:1rem;">
+    <div class="comment">// Arena Score Formula</div>
+    <br>
+    Total_Score = (Accuracy × 0.25) + (RiskAdj × 0.30) + (Consistency × 0.20) + (Execution × 0.15) − (DrawdownPenalty × 0.10)
+    <br><br>
+    <div class="comment">// Risk-Adjusted Return (simplified Sharpe proxy)</div>
+    RiskAdj = (Avg_Return − RiskFree_Rate) / Std_Dev_Returns
+    <br><br>
+    <div class="comment">// Drawdown Penalty: deducted at 2x rate beyond 5% peak-to-trough</div>
+    DrawdownPenalty = max(0, (MaxDD − 0.05) × 200)
+  </div>
+
+  <h2 class="section-h2">Ranking Tier System</h2>
+  <div class="tier-track" id="tierTrack"></div>
+  <div id="tierDetailContainer"></div>
+
+  <h2 class="section-h2">Fairness & Anti-Gaming Rules</h2>
+  <div class="callout danger">
+    <div class="callout-label">Anti-Exploitation Protocol</div>
+    Volatility spikes above 3 standard deviations are flagged. Any trade placed within 50ms of news timestamp is subject to execution latency normalization — preventing algorithmic front-running in the simulation environment.
+  </div>
+  <ul class="objective-list">
+    <li>All participants receive news data at identically randomized delays (150ms–800ms window) to prevent reaction-time advantages.</li>
+    <li>Head-to-Head scenarios use cryptographic hash verification — same seed, same price path for both players.</li>
+    <li>Luck filter: outcomes are cross-validated against a 100-simulation Monte Carlo run. Wins with p-value &lt; 0.15 are marked "luck-adjusted" and excluded from Elo calculation.</li>
+    <li>Spike guard: positions held &lt; 5 seconds during &gt;2% price moves are post-reviewed and may be voided for investigation.</li>
+    <li>Seasonal resets prevent Elo stagnation. Top-tier players are seeded into harder bracket pools each month.</li>
+  </ul>
+
+  <h2 class="section-h2">Reward Mechanisms</h2>
+  <div class="reward-grid">
+    <div class="reward-item"><span class="reward-icon">⚡</span><div class="reward-label">Weekly Win XP</div><div class="reward-value">+500 XP</div></div>
+    <div class="reward-item"><span class="reward-icon">🏅</span><div class="reward-label">H2H Win Badge</div><div class="reward-value">Elo +25</div></div>
+    <div class="reward-item"><span class="reward-icon">🔥</span><div class="reward-label">Win Streak</div><div class="reward-value">1.5× XP Mult</div></div>
+    <div class="reward-item"><span class="reward-icon">🏆</span><div class="reward-label">Tournament Win</div><div class="reward-value">Legend Badge</div></div>
+    <div class="reward-item"><span class="reward-icon">📊</span><div class="reward-label">Sharpe &gt; 2.0</div><div class="reward-value">Elite Frame</div></div>
+    <div class="reward-item"><span class="reward-icon">🎯</span><div class="reward-label">Perfect Accuracy</div><div class="reward-value">+300 XP Bonus</div></div>
+  </div>
+</div>
+
+<!-- ===================== SANDBOX MODE ===================== -->
+<div id="sandbox" class="section">
+  <div class="doc-header">
+    <div class="doc-label">Product Design Document · Section 3 of 4</div>
+    <h1 class="doc-title">Sandbox Mode Feature Specification</h1>
+    <div class="doc-meta">
+      Module: Free Play &nbsp;·&nbsp; Status: <span>Spec Complete</span>
+    </div>
+  </div>
+
+  <p style="font-size:14px; max-width:720px; margin-bottom:2rem;">Sandbox Mode is a consequence-free simulation environment providing unlimited access to historical and synthetic forex scenarios. It functions as the primary skill development layer — enabling deliberate practice, hypothesis testing, and post-trade reflection without ranking or P&L consequences. Users control all simulation parameters.</p>
+
+  <h2 class="section-h2">Core Features</h2>
+  <div class="feature-grid" id="sandboxFeatures"></div>
+
+  <h2 class="section-h2">Learning Tools</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <span class="feature-icon">💡</span>
+      <div class="feature-name">Contextual Hint System</div>
+      <p class="feature-desc">Three-tier hint structure. Tier 1: conceptual nudge (free). Tier 2: directional bias suggestion (costs XP). Tier 3: optimal trade suggestion with rationale (costs 2× XP). Hints are tracked and reduce scenario score to prevent over-reliance.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📈</span>
+      <div class="feature-name">Post-Trade Analytics</div>
+      <p class="feature-desc">Full trade reconstruction: entry timing vs. optimal entry, max favorable/adverse excursion, Sharpe contribution per trade, comparison against median player performance on same scenario.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔍</span>
+      <div class="feature-name">Error Breakdown Engine</div>
+      <p class="feature-desc">Classifies each trade error into one of 8 categories: premature entry, overleverage, wrong direction, ignored signal, held too long, exited too early, correlation blindspot, or news misread. Each category links to targeted learning modules.</p>
+    </div>
+  </div>
+
+  <h2 class="section-h2">User Control Parameters</h2>
+  <div id="sandboxControls"></div>
+
+  <h2 class="section-h2">Educational Value Mapping</h2>
+  <table class="data-table">
+    <thead><tr><th>Feature</th><th>Primary Skill Developed</th><th>Secondary Skill</th><th>Depth Level</th></tr></thead>
+    <tbody>
+      <tr><td>Historical Replay</td><td>News interpretation & context</td><td>Market structure reading</td><td class="val-neutral">Foundational</td></tr>
+      <tr><td>What-If Generator</td><td>Scenario analysis & hypothesis testing</td><td>Sensitivity analysis</td><td class="val-pos">Advanced</td></tr>
+      <tr><td>Correlation Viewer</td><td>Multi-currency risk management</td><td>Portfolio construction</td><td class="val-pos">Advanced</td></tr>
+      <tr><td>Slow-Motion Mode</td><td>Price action mechanics</td><td>Order flow reading</td><td class="val-neutral">Intermediate</td></tr>
+      <tr><td>Adjustable Leverage</td><td>Position sizing & risk math</td><td>Margin management</td><td class="val-neutral">Intermediate</td></tr>
+      <tr><td>Adjustable Volatility</td><td>Regime adaptation</td><td>Stop placement logic</td><td class="val-pos">Advanced</td></tr>
+      <tr><td>Post-Trade Analytics</td><td>Self-evaluation & bias recognition</td><td>Strategy iteration</td><td class="val-pos">Expert</td></tr>
+      <tr><td>Error Breakdown</td><td>Mistake classification & pattern recognition</td><td>Deliberate practice</td><td class="val-neutral">All Levels</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== SCENARIOS ===================== -->
+<div id="scenarios" class="section">
+  <div class="doc-header">
+    <div class="doc-label">Product Design Document · Section 4 of 4</div>
+    <h1 class="doc-title">Scenario Design Library — Volume I</h1>
+    <div class="doc-meta">
+      Scenarios: <span>5 of 25 planned</span> &nbsp;·&nbsp; Difficulty: Intermediate → Expert
+    </div>
+  </div>
+
+  <div class="scenario-selector" id="scenSelector"></div>
+  <div id="scenContent"></div>
+</div>
+
+<footer>
+  ForexSim Pro · Campaign & Systems Design Document · Version 1.0 · Confidential — Internal Use Only
+</footer>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+
+const levels = [
+  {
+    num: "L-01",
+    title: "First Print",
+    subtitle: "NFP Initiation",
+    tags: ["NFP", "USD Pairs", "Beginner"],
+    tagTypes: ["tag-blue", "tag-green", "tag-green"],
+    difficulty: 1,
+    narrative: "You are a junior analyst at Meridian Capital, a mid-size macro fund. It's your first live trading day. The senior trader has stepped out for a coffee run. The NFP release drops in 90 seconds. The Bloomberg terminal is live. Your risk limit is capped at 0.5% of NAV. The instruction is simple: read the print, form a bias, size your position, and manage the trade. Your first real decision starts now.",
+    objectives: [
+      "Interpret a Non-Farm Payrolls release against market consensus expectations",
+      "Identify the directional bias for USD pairs based on the data surprise",
+      "Size a position within a pre-defined risk limit (0.5% NAV max)",
+      "Execute an entry within the first 3 minutes post-release",
+      "Close the trade before the end of the New York morning session"
+    ],
+    concepts: [
+      "Non-Farm Payrolls (NFP): definition, release schedule, market sensitivity",
+      "Consensus estimate vs. actual print — the concept of 'surprise'",
+      "USD correlation: strong NFP = bullish USD (buy USD/JPY, sell EUR/USD)",
+      "Spread widening at high-impact news events",
+      "Position sizing: risk per trade as % of account",
+      "Stop-loss placement relative to pre-news price range"
+    ],
+    challenges: [
+      "Timer begins at T-90s. Observe pre-release USD/JPY price and implied volatility.",
+      "NFP actual prints. Calculate the surprise delta vs. consensus.",
+      "Determine directional bias: USD bullish or bearish?",
+      "Set position size: account = $50,000. Risk 0.5% = $250 max loss. Place stop-loss.",
+      "Execute entry. Manage trade through 3 common post-NFP patterns: spike-and-hold, spike-and-reverse, slow grind.",
+      "Exit at target (+1.5R) or stop (-1R) — whichever triggers first."
+    ],
+    dataInputs: [
+      {label: "Pair", val: "USD/JPY (primary), EUR/USD (reference)"},
+      {label: "Release", val: "US Non-Farm Payrolls (1st Friday, 08:30 ET)"},
+      {label: "Consensus", val: "+185,000 jobs"},
+      {label: "Actual", val: "+223,000 jobs"},
+      {label: "Surprise", val: "+38,000 (+20.5% above consensus)"},
+      {label: "Prev. Revision", val: "+5,000 upward (additional USD positive)"},
+      {label: "Unemployment Rate", val: "3.8% (unchanged, neutral)"},
+      {label: "Avg. Hourly Earnings", val: "+0.4% MoM (above +0.3% est — inflationary)"}
+    ],
+    decisions: [
+      "Go long or short USD based on the print? (Correct: long USD = long USD/JPY)",
+      "How much of the daily range has already been priced in during pre-news drift?",
+      "Do you enter immediately at print or wait for the initial spike to settle?",
+      "Where do you place your stop — below pre-news low or below the spike low?"
+    ],
+    errors: [
+      "Trading the wrong pair direction (selling USD despite a strong print)",
+      "Entering during the spread-spike window (within 1–2 seconds of release)",
+      "Overleveraging after a confirming print — ignoring the spike-reverse risk",
+      "Ignoring the Average Hourly Earnings component as a secondary hawkish signal",
+      "Setting stop too tight — placed inside the normal post-news volatility range"
+    ],
+    criteria: [
+      "Directional bias correctly identified: pass/fail",
+      "Entry executed within 3 minutes of release: timed check",
+      "Risk limit respected: ≤ $250 loss exposure confirmed",
+      "Trade closed within session: no overnight carry",
+      "Net result: pass if R-multiple ≥ −1.0 (i.e., did not exceed stop)"
+    ],
+    rewards: {xp: 500, badge: "First Print", unlock: "Level 2 access + NFP Playbook", bonus: "+100 XP if closed at +1.5R or better"}
+  },
+  {
+    num: "L-02",
+    title: "The Inflation Regime",
+    subtitle: "CPI Interpretation Under Uncertainty",
+    tags: ["CPI", "EUR/USD", "GBP/USD", "Intermediate"],
+    tagTypes: ["tag-blue", "tag-blue", "tag-blue", "tag-amber"],
+    difficulty: 2,
+    narrative: "Three months in. You're now tracking two pairs simultaneously. The US CPI release is a market-mover, but today the data is mixed: headline beats, core misses. The macro desk is split. Your supervisor wants a trade and rationale — not just a direction. This is where fundamental analysis begins to matter more than reflex. Two positions, two risk limits, one coherent thesis.",
+    objectives: [
+      "Distinguish between headline CPI and core CPI, and weight their market impact correctly",
+      "Identify 'mixed data' releases and assess net directional bias",
+      "Manage two correlated positions simultaneously (EUR/USD and GBP/USD)",
+      "Articulate a trade thesis in writing (simulated desk note requirement)",
+      "Apply a 2-trade portfolio risk cap: combined max loss ≤ 1% NAV"
+    ],
+    concepts: [
+      "Headline CPI vs. Core CPI: volatility drivers and Fed preference for core PCE",
+      "Inflation data and its link to Federal Reserve rate expectations",
+      "Interest rate differentials: USD rate expectations vs. EUR and GBP",
+      "Correlation risk: EUR/USD and GBP/USD often move together — net exposure doubles",
+      "Risk-adjusted position sizing across correlated assets",
+      "Fed Fund Futures: how CPI moves rate probability pricing"
+    ],
+    challenges: [
+      "Pre-trade: review Fed Fund Futures implied rate path before release.",
+      "CPI drops. Headline: +0.5% MoM (est. +0.3%). Core: +0.2% MoM (est. +0.3%). Assess net bias.",
+      "Core miss creates ambiguity. Is the market likely to fade the initial USD spike?",
+      "Size EUR/USD and GBP/USD positions with combined risk ≤ 1% NAV. Account: $100,000.",
+      "Manage through the 15-minute post-release noise period without early exit.",
+      "Write a 3-sentence 'desk note' justifying the trade and expected hold duration."
+    ],
+    dataInputs: [
+      {label: "Release", val: "US CPI MoM (2nd or 3rd week, 08:30 ET)"},
+      {label: "Headline CPI Actual", val: "+0.5% MoM vs. +0.3% consensus"},
+      {label: "Core CPI Actual", val: "+0.2% MoM vs. +0.3% consensus"},
+      {label: "YoY Headline", val: "+4.1% (prev: +3.9%)"},
+      {label: "YoY Core", val: "+3.5% (prev: +3.6%) — trending lower"},
+      {label: "Fed Fund Futures (pre-release)", val: "64% probability of 25bp hike in 6 weeks"},
+      {label: "EUR/USD pre-news", val: "1.0850 | GBP/USD pre-news: 1.2640"},
+      {label: "EUR/USD vol (1hr ATM)", val: "Elevated at 9.2 vs. 6.0 baseline"}
+    ],
+    decisions: [
+      "Does the headline beat outweigh the core miss? Net USD thesis: mild bullish or neutral?",
+      "Should you trade both pairs or just one to avoid correlation risk?",
+      "Do you scale in immediately or wait for post-spike stabilization?",
+      "How do you allocate $1,000 total risk between two correlated positions?"
+    ],
+    errors: [
+      "Over-weighting headline CPI and ignoring core (the Fed focuses on core and PCE)",
+      "Trading both pairs at full size — doubling the effective USD exposure unknowingly",
+      "Exiting immediately on the initial spike-back without waiting for direction to establish",
+      "No thesis written — reactive trade with no framework = poor score on qualitative component",
+      "Ignoring the YoY core trend (falling core CPI can signal disinflationary pressure)"
+    ],
+    criteria: [
+      "Correct net directional bias identified with written justification",
+      "Combined position risk ≤ 1% NAV verified",
+      "Both trades managed for minimum 15 minutes post-release",
+      "Desk note completed with: event, thesis, and exit criteria",
+      "Net P&L ≥ −1% NAV (loss cap compliance)"
+    ],
+    rewards: {xp: 800, badge: "Inflation Analyst", unlock: "Level 3 + CPI Regime Map", bonus: "+150 XP for correctly explaining core vs. headline in desk note"}
+  },
+  {
+    num: "L-03",
+    title: "The Hawkish Pivot",
+    subtitle: "FOMC Decision Day Trading",
+    tags: ["FOMC", "Interest Rates", "USD Complex", "Advanced"],
+    tagTypes: ["tag-red", "tag-amber", "tag-blue", "tag-orange"],
+    difficulty: 3,
+    narrative: "FOMC day. Markets have priced a 25bp hike at 90% probability. The decision at 14:00 ET will be followed by a statement and, 30 minutes later, a Powell press conference. You've learned that the rate decision itself rarely moves the market — it's the statement language and forward guidance that matter. Today, the statement contains an unexpected word: 'appropriate.' Does that signal a pause? A pivot? Or hawkish optionality? The next 60 minutes will define the trade.",
+    objectives: [
+      "Distinguish between a priced-in rate decision and a surprise in the forward guidance language",
+      "Read FOMC statement language for hawkish/dovish signals beyond the rate number",
+      "Trade the 'post-statement drift' rather than the initial spike",
+      "Manage a position through the Powell Q&A session (high secondary volatility risk)",
+      "Calculate and apply a volatility-adjusted stop based on ATR"
+    ],
+    concepts: [
+      "FOMC structure: rate decision → statement → press conference (3 volatility events)",
+      "Dot Plot: median Fed funds rate projections and market re-pricing",
+      "Buy the rumor, sell the fact: when a priced-in event causes reversal",
+      "Hawkish vs. dovish language: 'data-dependent,' 'restrictive for longer,' 'appropriate to pause'",
+      "Average True Range (ATR) as a stop-loss calibration tool",
+      "Yield differential: 2-year Treasury vs. Bund spread as USD/EUR driver"
+    ],
+    challenges: [
+      "Pre-event (T-60min): Review market positioning, DXY level, and Fed Fund Futures pricing.",
+      "14:00: Rate decision = 25bp hike (in line). Measure initial 30-second market response.",
+      "14:02: Statement released. Identify language change: 'ongoing increases' replaced by 'any additional firming.' Assess: hawkish, neutral, or dovish shift?",
+      "Trade the re-pricing drift: USD weakens 0.4% over 12 minutes as markets interpret dovish tilt.",
+      "14:30: Powell begins. Markets whipsaw on Q&A answer about inflation trajectory.",
+      "Decision: hold through press conference or take partial profit and reduce exposure?"
+    ],
+    dataInputs: [
+      {label: "FOMC Decision", val: "25bp hike (Fed Funds Rate: 5.25%–5.50%)"},
+      {label: "Market Expectation (pre)", val: "90% probability of 25bp hike"},
+      {label: "Statement Language Change", val: "'ongoing increases' → 'any additional firming may be appropriate'"},
+      {label: "Dot Plot Median (2024 end)", val: "4.6% (revised down from 5.1%)"},
+      {label: "2-Yr Treasury Yield (post)", val: "-14bp within 8 minutes of statement"},
+      {label: "EUR/USD pre-FOMC", val: "1.0820"},
+      {label: "EUR/USD post-statement", val: "1.0867 (+47 pips in 12 min)"},
+      {label: "DXY", val: "104.8 → 104.3 (−0.5%)"}
+    ],
+    decisions: [
+      "Do you trade the rate decision, the statement, or wait for Powell? (Correct: statement re-pricing)",
+      "Is the language change hawkish, neutral, or dovish? Justify quantitatively.",
+      "Do you exit before Powell starts to avoid Q&A volatility?",
+      "If Powell turns hawkish in Q&A: do you reverse, hold, or cut size?"
+    ],
+    errors: [
+      "Trading the rate decision itself (priced in = no edge; spread widens 5–10x at announcement)",
+      "Misreading 'any additional firming may be appropriate' as still-hawkish (it signals optionality, not commitment)",
+      "Holding full position into Powell Q&A without reducing size (unquantifiable risk)",
+      "Ignoring the Dot Plot revision — median rate projection down 50bp is a structural signal",
+      "Setting stop inside the statement-shock range — stopped out before drift develops"
+    ],
+    criteria: [
+      "Correct interpretation of statement language: hawkish/neutral/dovish assessed pre-Powell",
+      "Trade entered on statement, not rate decision",
+      "ATR-based stop applied correctly (stop width ≥ 1.5× 5-minute ATR at time of entry)",
+      "Partial or full exit before or during Powell press conference",
+      "Net result: pass if R-multiple ≥ +1.0R or loss ≤ −1.0R"
+    ],
+    rewards: {xp: 1200, badge: "Fed Watcher", unlock: "Level 4 + Statement Decoder Tool", bonus: "+200 XP for identifying Dot Plot revision as a key signal in post-trade review"}
+  },
+  {
+    num: "L-04",
+    title: "Cross-Currency Stress",
+    subtitle: "ECB + NFP Overlap Day",
+    tags: ["ECB", "NFP", "EUR/USD", "Multi-Event", "Advanced"],
+    tagTypes: ["tag-red", "tag-red", "tag-blue", "tag-orange", "tag-orange"],
+    difficulty: 4,
+    narrative: "It happens twice a year: the ECB rate decision falls on the same day as US Non-Farm Payrolls. Two of the highest-impact macro events on the global calendar — firing within 90 minutes of each other. The EUR/USD market faces sequential EUR-side shock followed by USD-side shock. Your desk has existing EUR/USD exposure from yesterday. Do you square the book before ECB? Before NFP? Or do you let both prints run? Risk management today is more important than directional calls.",
+    objectives: [
+      "Manage existing positions around back-to-back high-impact events",
+      "Separate EUR-specific and USD-specific drivers on the same pair",
+      "Apply event-risk hedging: partial position reduction before scheduled releases",
+      "Calculate maximum theoretical exposure across two sequential volatility events",
+      "Demonstrate discipline: defend against FOMO when market moves without your position"
+    ],
+    concepts: [
+      "Event-risk management: scaling down exposure before binary data releases",
+      "EUR/USD as a two-sided instrument: affected by both EUR and USD rate expectations",
+      "ECB structure: rate decision + Lagarde press conference (same as FOMC format)",
+      "Sequential volatility: how two back-to-back events compound intraday range",
+      "Hedging via option proxies: understanding how implied vol spikes protect/cost",
+      "Correlation breakdown: events can temporarily disconnect correlated pairs"
+    ],
+    challenges: [
+      "Pre-market: You hold 0.5% NAV long EUR/USD from yesterday at 1.0780. Current price: 1.0850. +70 pip open gain.",
+      "08:15 ET: ECB decision. Rate held. Statement: more dovish than expected. EUR drops 80 pips in 4 minutes.",
+      "Decision 1: Do you cut the position (now at breakeven) or hold for the recovery?",
+      "09:30 ET: NFP prints. +260,000 vs +180,000 consensus. Strong beat. USD rallies hard.",
+      "Decision 2: EUR/USD now 1.0760 — 20 pips below your entry. Stop or average?",
+      "Post-NFP: Market stabilizes at 1.0790. Write risk review: what was the maximum adverse exposure?"
+    ],
+    dataInputs: [
+      {label: "ECB Decision", val: "Rate hold at 4.50% (expected hold — no surprise)"},
+      {label: "ECB Statement", val: "Dropped 'rates sufficiently restrictive' language — dovish signal"},
+      {label: "Lagarde Tone", val: "Referenced slowing growth, soft Q1 PMIs — net EUR negative"},
+      {label: "NFP Actual", val: "+260,000 vs. +180,000 consensus (strong beat)"},
+      {label: "NFP Unemployment", val: "3.7% vs. 3.8% expected (USD positive)"},
+      {label: "EUR/USD Range (full day)", val: "1.0720 – 1.0870 (150 pip range)"},
+      {label: "Max Adverse Excursion", val: "1.0720 (−130 pips from prior close)"},
+      {label: "Implied Volatility (pre-open)", val: "12.4% — 2× normal daily level"}
+    ],
+    decisions: [
+      "Pre-ECB: Cut to half size, hold full, or add? Justify based on existing gain buffer.",
+      "Post-ECB (breakeven): Reassess directional thesis — has the ECB dovishness permanently shifted the bias?",
+      "Pre-NFP: With 20-pip loss open, do you cut exposure ahead of second event?",
+      "Post-NFP stabilization: Is the new 1.0790 level a re-entry opportunity or a continuation short?"
+    ],
+    errors: [
+      "Holding full position into both events without reducing for event risk",
+      "Averaging down after ECB dovish surprise — compounding the position into a second unknown event",
+      "Exiting entirely after ECB dip and missing the post-NFP stabilization bounce",
+      "Failing to calculate maximum adverse exposure before the day started (risk management failure)",
+      "Misattributing ECB language as neutral when the dropped phrase is a clear dovish signal"
+    ],
+    criteria: [
+      "Pre-ECB sizing decision documented and rationale recorded",
+      "Correctly identified ECB language as dovish (dropped phrase analysis)",
+      "Did not average into the position after the ECB-driven drawdown",
+      "Maximum adverse exposure calculated at end of session",
+      "Final P&L within ±1.5% NAV; no margin breach"
+    ],
+    rewards: {xp: 1800, badge: "Event Stacker", unlock: "Level 5 + Multi-Event Calendar Tool", bonus: "+250 XP for correct pre-ECB size reduction logged in decision journal"}
+  },
+  {
+    num: "L-05",
+    title: "Emerging Market Contagion",
+    subtitle: "EM Crisis + Risk-Off Cascade",
+    tags: ["RBI", "USD/INR", "Risk-Off", "Expert"],
+    tagTypes: ["tag-red", "tag-amber", "tag-red", "tag-orange"],
+    difficulty: 5,
+    narrative: "An unexpected RBI emergency rate cut triggers a risk-off cascade. USD/INR breaks above a multi-year resistance level. Within 20 minutes, the contagion spreads: AUD/USD falls, USD/ZAR spikes, gold rallies 1.2%. Your job is to simultaneously manage a long AUD/USD position (inherited from an overnight macro trade) and decide whether to initiate a defensive short on AUD/USD while exploring an opportunistic long on gold. Three assets, two directions, real-time correlations shifting. This is institutional-grade pressure.",
+    objectives: [
+      "Recognize and respond to an unexpected risk-off event in real time",
+      "Understand EM currency contagion mechanics and transmission to developed market pairs",
+      "Manage an inherited position during a regime change event",
+      "Assess cross-asset correlation shifts under stress conditions",
+      "Implement a multi-leg portfolio response within defined risk parameters"
+    ],
+    concepts: [
+      "Risk-off cascade: EM shock → capital flight → USD strength → commodity currencies weaken",
+      "Central bank emergency decisions: signaling effect vs. direct rate impact",
+      "AUD as a risk-proxy currency: sensitivity to global risk appetite and commodity prices",
+      "Safe-haven flows: USD, JPY, CHF, Gold during stress events",
+      "Correlation matrix breakdown: assets that normally move together can decouple in crises",
+      "Carry trade unwind: high-yielding currencies sold rapidly during risk-off events"
+    ],
+    challenges: [
+      "T+0: RBI emergency rate cut headline crosses Bloomberg. USD/INR +1.8% in 60 seconds.",
+      "You hold: long AUD/USD from 0.6520. Current price: 0.6490 (−30 pips, open loss).",
+      "T+5min: AUD/USD breaks below key support at 0.6480. Volume spike confirms institutional selling.",
+      "Decision point: cut the long, hold, or reverse to short AUD/USD?",
+      "T+12min: Gold +0.8%. USD/JPY −1.1%. Classic risk-off confirmed across 3+ assets.",
+      "Decision point: Initiate long gold to hedge equity/FX book? Calculate cross-asset correlation at this moment.",
+      "T+30min: Markets partially stabilize. RBI clarifies: emergency cut is 'precautionary, not crisis-driven.' Partial reversal begins."
+    ],
+    dataInputs: [
+      {label: "Trigger Event", val: "RBI Emergency Rate Cut: −50bp (repo rate: 6.00% → 5.50%)"},
+      {label: "USD/INR", val: "82.40 → 83.89 (+1.8%) — breaks 5-year resistance at 83.50"},
+      {label: "AUD/USD", val: "0.6520 → 0.6448 (−72 pips in 18 minutes)"},
+      {label: "Gold (XAU/USD)", val: "$1,892 → $1,915 (+$23, +1.2%)"},
+      {label: "USD/JPY", val: "149.80 → 148.65 (−115 pips — safe haven JPY demand)"},
+      {label: "VIX", val: "14.2 → 19.8 (+39% — significant vol spike)"},
+      {label: "AUD/USD ATR (5-min)", val: "22 pips (vs. normal 8 pips — elevated 2.75×)"},
+      {label: "RBI Clarification (T+28min)", val: "'Precautionary measure, not signal of systemic distress'"}
+    ],
+    decisions: [
+      "At AUD/USD 0.6490: cut position immediately, set tight stop, or wait for more confirmation?",
+      "At AUD/USD 0.6480 support break: does the technical breakdown validate a reversal to short?",
+      "Gold at $1,915: Is this a hedge or a speculation? How much of your risk budget does it consume?",
+      "At RBI clarification (T+28min): fade the reversal (re-enter AUD long) or stay flat and reassess?"
+    ],
+    errors: [
+      "Holding AUD/USD long because 'it's just an EM event, not relevant to AUD' — misunderstanding risk transmission",
+      "Chasing gold at the top of the initial spike without a defined entry thesis",
+      "Reversing to short AUD/USD at the bottom, just before the RBI clarification reversal",
+      "No position size adjustment despite ATR expanding to 2.75× normal — failing volatility-adjusted risk",
+      "Ignoring JPY strength as a cross-validation signal for the risk-off thesis"
+    ],
+    criteria: [
+      "Risk-off regime correctly identified within 5 minutes of headline",
+      "AUD/USD position managed (cut or hedged) before 0.6480 support break",
+      "Cross-asset signals referenced in post-trade journal (minimum 3: AUD, gold, JPY)",
+      "Volatility-adjusted position sizing applied (position scaled by ATR expansion ratio)",
+      "Final net P&L: pass if ≥ −1.5% NAV; bonus pass if gold hedge offsets AUD loss"
+    ],
+    rewards: {xp: 2500, badge: "Contagion Navigator", unlock: "Level 6 + Cross-Asset Correlation Dashboard", bonus: "+350 XP for using gold as a documented hedge with calculated hedge ratio"}
+  },
+  {
+    num: "L-06",
+    title: "The Strategy Architect",
+    subtitle: "Full Strategy Build, Backtest & Sharpe Evaluation",
+    tags: ["Multi-Event", "Strategy", "Sharpe Ratio", "Expert", "Master"],
+    tagTypes: ["tag-red", "tag-amber", "tag-orange", "tag-orange", "tag-red"],
+    difficulty: 6,
+    narrative: "You've survived five increasingly complex scenarios. Now you're being asked to build, not just trade. Your mandate: design a rules-based news trading strategy, define its parameters, apply it to a 30-trade simulated backtest covering six event types, and present a Sharpe-ratio graded performance review to the fund's risk committee. This is the capstone. The platform simulates a 3-month trading window across synthetic but realistic market conditions. Your strategy must be defined in writing before the first trade. Post-session, you present the statistical performance review.",
+    objectives: [
+      "Define a complete, rules-based trading strategy with entry, exit, and risk management rules",
+      "Apply the strategy consistently across a minimum of 30 news events over a simulated 3-month window",
+      "Calculate and interpret the Sharpe ratio, maximum drawdown, and win rate of the strategy",
+      "Identify the strategy's edge case failures and propose parameter adjustments",
+      "Present a fund-ready performance summary with quantitative and qualitative assessment"
+    ],
+    concepts: [
+      "Strategy specification: event filter, direction rule, entry trigger, stop placement, target, position sizing",
+      "Sharpe Ratio: (Annualized Return − Risk-Free Rate) / Annualized Volatility of Returns",
+      "Calmar Ratio: Annualized Return / Maximum Drawdown — useful for news traders",
+      "Expectancy: (Win Rate × Avg Win) − (Loss Rate × Avg Loss) — must be positive",
+      "Overfitting risk: strategy parameters optimized on past data may not generalize",
+      "Walk-forward validation: testing strategy on out-of-sample data after in-sample optimization"
+    ],
+    challenges: [
+      "Phase 1 — Strategy Definition: Write strategy rules covering 6 components (see Decision Points).",
+      "Phase 2 — Simulation: Apply strategy to 30 news events across NFP, CPI, FOMC, ECB, GDP, BoJ releases.",
+      "Phase 3 — Performance Logging: Record each trade: event type, direction, entry, exit, R-multiple.",
+      "Phase 4 — Statistics: Calculate win rate, avg win, avg loss, expectancy, max drawdown, Sharpe ratio.",
+      "Phase 5 — Stress Test: Identify the 3 worst trades. What caused them? Was it strategy failure or market randomness?",
+      "Phase 6 — Presentation: Deliver a 1-page performance summary formatted for a risk committee."
+    ],
+    dataInputs: [
+      {label: "Simulation Window", val: "90 days, synthetic market data calibrated to historical vol regimes"},
+      {label: "Event Types", val: "NFP (6×), CPI (3×), FOMC (2×), ECB (2×), GDP (3×), BoJ (2×), Other (12×)"},
+      {label: "Starting Capital", val: "$500,000 simulated (institutional scale)"},
+      {label: "Risk-Free Rate (proxy)", val: "5.25% annualized (current Fed Funds rate)"},
+      {label: "Max Allowable Drawdown", val: "8% (fund mandate hard stop)"},
+      {label: "Required Sharpe (pass)", val: "≥ 1.0 (institutional minimum)"},
+      {label: "Required Sharpe (distinction)", val: "≥ 1.5 (top quartile performance)"},
+      {label: "Performance Review Format", val: "1-page: metrics table + 3 insights + 2 improvement recommendations"}
+    ],
+    decisions: [
+      "Strategy rule 1: Which events will you trade? All, or filtered by minimum surprise threshold?",
+      "Strategy rule 2: Entry timing — immediately at release, or after 30-second confirmation candle?",
+      "Strategy rule 3: Stop-loss — fixed pip, ATR-multiple, or pre-news range multiple?",
+      "Strategy rule 4: Position sizing — fixed lot, fixed risk %, or volatility-scaled?",
+      "Strategy rule 5: Profit target — fixed R-multiple, or trailing stop?",
+      "Strategy rule 6: Filters — do you avoid trading if a correlated event is within 2 hours?"
+    ],
+    errors: [
+      "Defining strategy rules after seeing some results (lookahead bias — automatic fail)",
+      "Sharpe Ratio miscalculated by using total return / standard deviation without annualizing",
+      "Ignoring the Calmar ratio — a high Sharpe can coexist with a catastrophic drawdown",
+      "Changing strategy parameters mid-simulation ('rule creep') without documenting rationale",
+      "Over-optimizing on the 30-trade sample — identifying patterns that are statistical noise",
+      "Failing to identify win rate vs. expectancy distinction: a 40% win rate is fine if avg win >> avg loss"
+    ],
+    criteria: [
+      "Written strategy document submitted before Simulation Phase begins",
+      "Minimum 30 trades logged across ≥ 4 event types",
+      "Sharpe Ratio ≥ 1.0 (calculated correctly with annualization)",
+      "Maximum drawdown stayed within 8% fund mandate",
+      "Performance summary submitted: contains all required metrics + 3 insights + 2 improvement ideas",
+      "No post-hoc rule changes detected in trade log audit"
+    ],
+    rewards: {xp: 5000, badge: "Strategy Architect", unlock: "Arena Mode Elite Division + Custom Dashboard", bonus: "+1000 XP for Sharpe ≥ 1.5 | +500 XP for Calmar ≥ 2.0 | 'Quant Distinction' badge for both"}
+  }
+];
+
+const tiers = [
+  {name: "Beginner", color: "#8899bb", elo: "0–999", promote: "Win 5 of 7 weekly matches + Arena score avg ≥ 55", demote: "N/A — floor tier", perks: "Access to standard event scenarios, basic leaderboard"},
+  {name: "Intermediate", color: "#00d4ff", elo: "1000–1799", promote: "Win 6 of 8 + Sharpe proxy ≥ 0.8 + no losing streak ≥ 4", demote: "Lose 6 of 8 in a month + score avg < 45", perks: "Access to Head-to-Head mode, weekly challenge bonus XP"},
+  {name: "Elite", color: "#00ff9d", elo: "1800–2499", promote: "Tournament top-32 finish + win rate ≥ 58% over 20 matches", demote: "Lose 7 of 10 + drawdown avg > 6%", perks: "Team Desk captain eligibility, exclusive monthly scenarios"},
+  {name: "Master", color: "#ffd700", elo: "2500–3199", promote: "Tournament top-8 finish + Sharpe proxy ≥ 1.5 over 30 matches", demote: "Tournament exit in R1 for 2 consecutive seasons", perks: "Global Tournament seeding, performance analytics export"},
+  {name: "Legend", color: "#ff6b35", elo: "3200+", promote: "Top-3 Global Tournament finish (invitation only)", demote: "By committee review only — annual performance audit", perks: "Lifetime badge, advisory access, early feature testing"}
+];
+
+const scoringComponents = [
+  {label: "Prediction Accuracy", weight: "25%", pct: 25, color: "#00d4ff", desc: "Correct directional call scored as binary + magnitude bonus. Accuracy = (Correct Trades / Total Trades). Magnitude bonus: +10% score for each additional 0.5 surprise sigma correctly predicted."},
+  {label: "Risk-Adjusted Return", weight: "30%", pct: 30, color: "#00ff9d", desc: "Sharpe proxy: (avg trade return − risk-free proxy) / std dev of trade returns. Annualized and normalized to 0–100 score scale. Highest weight due to institutional relevance."},
+  {label: "Consistency Score", weight: "20%", pct: 20, color: "#ffd700", desc: "Measured as inverse of return variance. Low variance across trades = high consistency. Streak bonuses apply: 3+ consecutive positive trades = +5% consistency multiplier."},
+  {label: "Execution Timing", weight: "15%", pct: 15, color: "#ff6b35", desc: "Scored relative to optimal entry window. Entries within 30–90 seconds post-release score 100%. Earlier (spread spike) or later (momentum faded) entries score progressively lower."},
+  {label: "Drawdown Penalty", weight: "10%", pct: 10, color: "#ff4d4d", desc: "Negative modifier. Deducted linearly beyond 3% drawdown threshold, exponentially beyond 5%. Maximum penalty = −20 points from total score. Incentivizes capital preservation."}
+];
+
+const sandboxFeatures = [
+  {icon: "⏪", name: "Historical Event Replay", desc: "Access to 500+ catalogued real-world news events from 2015–present. Replay any event with original price data, spreads, and volatility profiles. Session timestamps intact for authentic timing pressure.", skills: ["Context reading", "Pattern recognition"]},
+  {icon: "🔀", name: "What-If Scenario Generator", desc: "Modify any historical event's key variable: change the NFP actual by ±50K, adjust CPI by ±0.2%, or alter the FOMC language. Platform re-runs the price simulation and shows counterfactual outcomes.", skills: ["Sensitivity analysis", "Hypothesis testing"]},
+  {icon: "🕸", name: "Multi-Currency Correlation Viewer", desc: "Real-time correlation matrix across 28 major pairs during active simulation. Heat-map display with 1-hour rolling window. Identifies when historical correlations break down during stress events.", skills: ["Portfolio risk", "Cross-asset thinking"]},
+  {icon: "🐢", name: "Slow-Motion Trading Mode", desc: "Reduce simulation speed to 10%, 25%, or 50% of real time. Observe candlestick formation, spread behavior, and price discovery in granular detail. Ideal for studying order flow patterns.", skills: ["Price action", "Order flow"]},
+  {icon: "∞", name: "Unlimited Practice Trading", desc: "No account balance constraints or ranking consequences. Experiment with any position size, leverage level, or entry timing. Full trade log retained for review regardless of outcome.", skills: ["Execution", "Risk experimentation"]}
+];
+
+const scenarios = [
+  {
+    id: "s1",
+    title: "The Blowout Print",
+    subtitle: "NFP vs. Consensus — Major Positive Surprise",
+    basis: "US Non-Farm Payrolls (first Friday of month, 08:30 ET)",
+    conditions: {volatility: "Elevated pre-release (implied vol: 10.2%)", sentiment: "Mixed — markets expect soft print after weak ADP", positioning: "Speculative community is net short USD ahead of release per COT data"},
+    newsData: [{label: "Expected", val: "+165,000"}, {label: "Actual", val: "+303,000"}, {label: "Surprise Delta", val: "+138,000 (+83.6% above consensus)"}, {label: "Unemployment Rate", val: "3.7% (unch)"}, {label: "Avg Hourly Earnings", val: "+0.5% MoM (est. +0.3%) — inflationary"}, {label: "Prior Revision", val: "+22,000 upward"}],
+    reaction: "USD/JPY: +145 pips in 90 seconds. EUR/USD: −110 pips. GBP/USD: −98 pips. Spreads on USD/JPY widen to 4.2 pips (from 0.9 pip baseline) in the first 8 seconds. Initial spike of +180 pips followed by a 55-pip retracement as profit-taking hits.",
+    conflicts: ["Earnings component beats hard (+0.5%) — inflationary signal supports hawkish Fed. But unemployment unchanged — no tightening signal from labor slack side.", "Initial spike reversal of 55 pips creates confusion: is the market pricing in 'peak hawkishness' and the beat is already fully absorbed?", "COT positioning shows crowded short-USD — a short squeeze could amplify the move beyond fundamental fair value."],
+    objective: "Go long USD (USD/JPY) on the strong print. Manage the entry timing to avoid the spread-spike window, capture the trend move, and exit before the reversal extends beyond the initial bounce.",
+    decisions: ["Enter immediately at print or wait for spread normalization (estimated 8–15 seconds)?", "Do you use the 55-pip retracement as a better entry or as a warning sign of reversal?", "Set profit target at resistance (149.50) or trail stop? Time horizon: 30 minutes or end of session?", "Does the earnings beat change your conviction enough to add to the position?"],
+    outcomes: [
+      {title: "Path A: Trend Hold", color: "var(--green)", desc: "Spread normalizes by T+12s. Entry at +80 pips above pre-release. Position holds through retracement. Final close: +160 pips. Outcome: +2.1% return on position."},
+      {title: "Path B: Spike Reverse", color: "var(--amber)", desc: "Market prices in 'sell the fact' dynamic. Retracement extends to −90 pips from spike high. Position closes at breakeven or slight loss. Key lesson: overreactions correct."},
+      {title: "Path C: Caught in Spread", color: "var(--red)", desc: "Entry made within 5 seconds of release. Fill at worst spread. 4.2-pip spread costs $420 on a standard lot. Retracement hits stop before momentum resumes."}
+    ],
+    learning: "Strong data prints are not guaranteed directional trades. Entry timing within the spread normalization window is as important as the directional call. The short-squeeze dynamic from crowded positioning can distort the post-news move beyond fundamental fair value."
+  },
+  {
+    id: "s2",
+    title: "The False Pivot",
+    subtitle: "FOMC Meeting — Language Shift Misinterpretation",
+    basis: "FOMC Statement + Powell Press Conference (8× per year, 14:00 ET)",
+    conditions: {volatility: "Moderate pre-event (implied vol: 8.1%)", sentiment: "Market pricing 40% probability of rate cut within 3 meetings", positioning: "USD mildly net-short; bonds rally-biased (rate-cut bets building)"},
+    newsData: [{label: "Decision", val: "Rate unchanged at 5.25%–5.50% (as expected)"}, {label: "Key Language Change", val: "Added 'risks to achieving goals are moving into better balance'"}, {label: "Removed Phrase", val: "'Inflation remains elevated' — replaced with 'inflation has eased'"}, {label: "Dot Plot", val: "Median 2024 projection: 4.6% (two cuts priced in)"}, {label: "Powell Opening", val: "Emphasized: 'data-dependent' and 'not declaring victory on inflation'"}, {label: "Q&A Pivot", val: "Powell confirms no imminent cut: 'Premature to declare rate cuts will happen'"}],
+    reaction: "Statement drops → markets read dovishly → EUR/USD +80 pips, USD/JPY −90 pips in 10 minutes. Then Powell Q&A begins → EUR/USD gives back 60 pips in 8 minutes as Powell pushes back on cut expectations. Net move: EUR/USD +20 pips vs. pre-FOMC. High confusion, two-directional whipsaw.",
+    conflicts: ["Statement language IS dovish (dropped 'inflation elevated,' added 'risks balanced'). But Powell explicitly says no imminent cut — verbal override of written statement.", "Dot Plot shows 2 cuts priced in by Fed members themselves. Yet Powell downplays urgency of timeline.", "Market was already partially positioned for dovish pivot — initial move may be short-covering, not new positioning."],
+    objective: "Trade the statement reaction correctly, then navigate the Powell reversal. The challenge is distinguishing between structural dovish shift (statement) and tactical verbal hawkishness (Powell verbal override).",
+    decisions: ["After statement: go long EUR/USD on dovish language? Or wait for Powell?", "If long from statement: do you take profit at +50 pips before Powell begins (T+25min)?", "During Powell Q&A hawkish pushback: does this invalidate the trade or is it noise?", "Post-FOMC: what is the net interpretation — net dovish (structural) or net hawkish (near-term)?"],
+    outcomes: [
+      {title: "Path A: Profitable Trade", color: "var(--green)", desc: "Enter long EUR/USD on statement. Take 60% profit before Powell. Hold 40% through Q&A. Net: +48 pip average. Correct reading of statement as structurally bullish EUR."},
+      {title: "Path B: Whipsaw Loss", color: "var(--red)", desc: "Enter full size on statement. Hold through Powell. Entire EUR/USD gain reverses. Exit at flat or small loss. Lesson: press conference is a second event."},
+      {title: "Path C: Fade the Statement", color: "var(--amber)", desc: "Correctly anticipate Powell hawkish correction. Short EUR/USD at the +80 pip spike peak. Net +55 pips as market retraces. High-risk contrarian approach — requires precise timing."}
+    ],
+    learning: "FOMC events have at least two volatility phases: the statement and the press conference. Structural language changes (written statement) carry more long-term weight, but Powell's verbal tone can override short-term market direction. Managing across both phases is the required skill."
+  },
+  {
+    id: "s3",
+    title: "The Soft Landing Myth",
+    subtitle: "GDP Miss + Strong Consumer Data — Conflicting Narrative",
+    basis: "US Advance GDP (quarterly, 08:30 ET) + University of Michigan Consumer Sentiment",
+    conditions: {volatility: "Low pre-event (GDP is lower frequency, less priced-in than NFP/CPI)", sentiment: "Soft landing narrative dominant — markets expect growth slowdown but no recession", positioning: "USD mildly net-long; equities near all-time highs — risk-on environment"},
+    newsData: [{label: "GDP QoQ Actual", val: "+1.4% annualized (est. +2.2%)"}, {label: "GDP Surprise", val: "−36% below consensus — significant miss"}, {label: "PCE Price Index (within GDP)", val: "+3.4% (above Fed's 2% target — stagflation signal)"}, {label: "Consumer Sentiment", val: "76.8 (est. 70.2 — significant beat)"}, {label: "1-Yr Inflation Expectations", val: "3.2% (prev: 3.5%) — cooling"}, {label: "USD/JPY pre-release", val: "151.40"}],
+    reaction: "GDP miss triggers USD sell-off: USD/JPY −75 pips in 4 minutes. Consumer Sentiment beat 30 minutes later triggers USD recovery: USD/JPY +40 pips. Net: USD/JPY −35 pips. Stagflation concern from PCE component creates bond market volatility — 10-year Treasury yield −8bp.",
+    conflicts: ["GDP miss = economic weakness = dovish Fed = USD bearish. BUT PCE within GDP = inflation still elevated = hawkish Fed = USD bullish. Net signal: ambiguous.", "Consumer Sentiment beat suggests consumer is resilient — counters recession fear but doesn't address the PCE inflation problem.", "Stagflation scenario (slow growth + high inflation) is the worst outcome for central bank clarity — highest uncertainty for FX traders."],
+    objective: "Interpret a genuinely ambiguous macro dataset. GDP miss is bearish USD; PCE beat is hawkish USD; consumer sentiment beat is risk-positive. Net bias must be justified quantitatively, not directionally assumed.",
+    decisions: ["After GDP miss: short USD/JPY immediately, or wait for the Consumer Sentiment print 30 minutes later?", "If PCE within GDP is elevated: should you reduce the conviction on the USD short?", "After Consumer Sentiment beat: does the recovery validate a long USD re-entry?", "What is the 48-hour directional view? Does today's data shift the macro narrative?"],
+    outcomes: [
+      {title: "Path A: Two-Trade Approach", color: "var(--green)", desc: "Short USD/JPY on GDP miss (+45 pips). Close before Consumer Sentiment. Re-evaluate. Potentially long on sentiment beat if conviction established. Total: +45 pips net with controlled risk."},
+      {title: "Path B: Hold Through Both", color: "var(--amber)", desc: "Short USD/JPY from GDP miss. Sentiment beat causes 40-pip reversal. Net: +35 pips if exited cleanly. Risk: sentiment beat fully reverses GDP move — requires tight management."},
+      {title: "Path C: No Trade", color: "var(--accent)", desc: "Correctly identifies ambiguous/stagflation signal. Sits out both releases. XP awarded for correct ambiguity identification. Not every event has a tradeable edge."}
+    ],
+    learning: "Not every data release has a clean, tradeable directional bias. Stagflation signals (weak GDP + high PCE) create genuine uncertainty. The discipline of sitting out an ambiguous scenario is a core risk management skill — and the platform rewards it explicitly with 'patience XP.'"
+  },
+  {
+    id: "s4",
+    title: "The Carry Unwind",
+    subtitle: "BoJ Surprise YCC Policy Shift — Carry Trade Collapse",
+    basis: "Bank of Japan Policy Decision + YCC Adjustment Announcement",
+    conditions: {volatility: "Low pre-event — BoJ expected to hold YCC band unchanged", sentiment: "Massive JPY short positioning (carry trade) — 10-year positioning extreme per COT", positioning: "USD/JPY at 151.70 — near 32-year JPY high; carry trade at maximum extent"},
+    newsData: [{label: "Decision", val: "BoJ adjusts YCC band: 10-yr JGB yield cap raised from 0.50% to 1.00%"}, {label: "Market Expectation", val: "No change (only 6% probability of adjustment priced in)"}, {label: "Surprise Magnitude", val: "Extreme — massive policy shift vs. near-zero expectation"}, {label: "BoJ Statement", val: "'Greater flexibility to respond to upside risks to inflation'"}, {label: "USD/JPY pre-announcement", val: "151.70"}, {label: "JGB 10-yr yield pre/post", val: "0.48% → 0.97% (+49bp in minutes)"}],
+    reaction: "USD/JPY: 151.70 → 146.60 in 22 minutes (−510 pips — historic single-session move). JPY carry trades (EUR/JPY, AUD/JPY, GBP/JPY) all collapse simultaneously. JPY surges across the board. Gold −0.8% (USD-denominated asset repricing). Japanese equities sell off on stronger JPY export concerns.",
+    conflicts: ["BoJ explicitly says this is NOT a policy pivot — just 'greater flexibility.' Market ignores verbal framing and trades the mechanical rate cap change.", "Carry trade unwind is self-reinforcing: as USD/JPY falls, margin calls force additional JPY buying, creating a feedback loop beyond fundamental fair value.", "Other central banks (Fed, ECB) have not changed stance — the move is entirely BoJ-driven, not a global regime shift."],
+    objective: "If you hold any JPY short (carry trade) position, manage the emergency unwind. If flat: assess whether the BoJ move is a one-time adjustment or the start of a structural JPY reversal. Decide entry: long JPY (short USD/JPY) or wait for stabilization.",
+    decisions: ["Flat pre-announcement: do you go short USD/JPY immediately at the announcement?", "If long USD/JPY from carry: what is your emergency exit strategy? Market is gapping — slippage is real.", "At 148.00: is the unwind over or does momentum continue to 145.00 (next support)?", "48-hour view: BoJ normalizing = structural JPY strength trend, or one-off adjustment?"],
+    outcomes: [
+      {title: "Path A: Short USD/JPY on Announcement", color: "var(--green)", desc: "Enter short at 150.80 (after initial spread normalization). Target 147.00. Stop at 152.50. Trend holds. Net: +380 pips. Exceptional trade — but requires fast execution at a chaotic release."},
+      {title: "Path B: Carry Trade Catastrophe", color: "var(--red)", desc: "Hold existing long USD/JPY. Margin call triggered at 149.00 (−270 pips). Position force-closed at −4.2% account loss. Worst-case: −8% if no margin call trigger. Scenario teaches carry risk."},
+      {title: "Path C: Wait and Fade", color: "var(--amber)", desc: "Sit out initial move. Re-enter long USD/JPY at 146.80 on fundamental reversion thesis (BoJ not a full pivot). Partial recovery to 148.50 = +170 pips. Medium conviction, lower risk approach."}
+    ],
+    learning: "Carry trade positions carry tail risk that is invisible until triggered. A single unexpected central bank move can unwind months of accumulated positioning in 22 minutes. Position sizing in carry trades must account for maximum adverse excursion during unwind scenarios — not just average daily move."
+  },
+  {
+    id: "s5",
+    title: "The Conflicted Committee",
+    subtitle: "ECB Split Decision — Divided Vote + Hawkish Dissent",
+    basis: "ECB Monetary Policy Decision + Lagarde Press Conference",
+    conditions: {volatility: "Moderate-high (implied EUR/USD vol: 9.8% — elevated ahead of close vote)", sentiment: "Market expects 25bp hike but fears this may be the last one", positioning: "EUR slightly net-long; market pricing 60% chance of rate hold in next meeting"},
+    newsData: [{label: "Decision", val: "25bp hike (as expected) — Deposit Rate: 4.25%"}, {label: "Vote Split", val: "Disclosed as 'significant minority' voted to hold — first public dissent in 2 years"}, {label: "Lagarde Statement", val: "'We have more ground to cover' — hawkish"}, {label: "Staff Projections", val: "2024 growth revised down to 0.6% (from 0.9%)"}, {label: "Inflation Projection", val: "2025 inflation: 2.3% — approaching target"}, {label: "EUR/USD pre-ECB", val: "1.0960"}],
+    reaction: "Initial reaction: hawkish statement → EUR/USD +40 pips (1.0960 → 1.1000). Then vote split disclosure triggers EUR/USD reversal: −65 pips (1.1000 → 1.0935). Lagarde Q&A: ambiguous — neither confirms nor denies next hike. Final: EUR/USD at 1.0940, net −20 pips vs. pre-ECB.",
+    conflicts: ["Lagarde says 'more ground to cover' (hawkish) but staff projections show growth collapse (dovish). Which forecast wins?", "Vote split (significant minority for hold) signals the ECB committee is fractured. The next meeting is genuinely uncertain — 50/50 binary.", "EUR/USD moved in both directions intraday — the day ended close to where it started, punishing both bulls and bears who overcommitted."],
+    objective: "Interpret the institutional disagreement within the ECB. The 'split committee' scenario creates genuine uncertainty about the forward path. Trade the reaction rather than trying to predict the ultimate direction. Focus on managing both sides of the whipsaw.",
+    decisions: ["Initial hawkish statement: go long EUR/USD immediately?", "Vote split disclosure: do you exit the long immediately when the reversal begins?", "Lagarde ambiguity: hold existing position or go flat into conference uncertainty?", "End of day: net position? Or wait for next ECB meeting pricing to clarify trend?"],
+    outcomes: [
+      {title: "Path A: Quick-in, Quick-out", color: "var(--green)", desc: "Long at 1.0970. Target +30 pips. Tight stop −15 pips. Hit target at 1.1000 before vote split hits wires. Net: +30 pips. Missed the reversal entirely. Correct approach for news events with secondary risk."},
+      {title: "Path B: Caught in Whipsaw", color: "var(--red)", desc: "Long from statement. Hold through vote split and Lagarde. Exit at 1.0940 = −20 pips. Full round-trip loss. Lesson: ECB events have multiple volatility phases, each potentially contradicting the prior."},
+      {title: "Path C: Short the Reversal", color: "var(--amber)", desc: "Recognize vote split as a more significant signal than Lagarde verbals. Short EUR/USD at 1.0995 after split disclosure. Target 1.0935. Net +60 pips. Requires reading secondary data releases quickly."}
+    ],
+    learning: "ECB committee dynamics are as important as the rate decision itself. A 'split vote' disclosure fundamentally changes the forward rate path uncertainty. News traders must track all components of a central bank event, not just the headline rate number — the details within the communiqué often contain the real market-moving information."
+  }
+];
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+
+function renderLevels() {
+  const grid = document.getElementById('levelGrid');
+  const detail = document.getElementById('levelDetail');
+
+  levels.forEach((lvl, i) => {
+    const card = document.createElement('div');
+    card.className = 'level-card';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <div class="level-header">
+        <div>
+          <div class="level-num">${lvl.num}</div>
+        </div>
+        <div>
+          <div class="level-title">${lvl.title}</div>
+          <div class="level-subtitle">${lvl.subtitle}</div>
+        </div>
+      </div>
+      <div class="level-tags">
+        ${lvl.tags.map((t,j)=>`<span class="tag ${lvl.tagTypes[j]}">${t}</span>`).join('')}
+        <span style="margin-left:auto; font-family:var(--font-mono); font-size:10px; color:var(--muted);">${'●'.repeat(lvl.difficulty)}${'○'.repeat(6-lvl.difficulty)}</span>
+      </div>`;
+    card.addEventListener('click', () => toggleLevel(i, card));
+    grid.appendChild(card);
+  });
+}
+
+function toggleLevel(idx, card) {
+  const detail = document.getElementById('levelDetail');
+  const allCards = document.querySelectorAll('.level-card');
+  const allDetails = document.querySelectorAll('.level-detail');
+
+  const wasActive = card.classList.contains('active');
+  allCards.forEach(c => c.classList.remove('active'));
+  allDetails.forEach(d => d.remove());
+
+  if (wasActive) return;
+  card.classList.add('active');
+
+  const lvl = levels[idx];
+  const det = document.createElement('div');
+  det.className = 'level-detail active';
+  det.innerHTML = `
+    <div class="detail-tabs">
+      ${['Overview','Objectives','Concepts','Gameplay','Data Inputs','Decisions','Error Traps','Criteria','Rewards'].map((t,i)=>`<div class="detail-tab${i===0?' active':''}" data-tab="${i}">${t}</div>`).join('')}
+    </div>
+    <div class="detail-panel active" data-panel="0">
+      <h3>Scenario Narrative</h3>
+      <p>${lvl.narrative}</p>
+      <div class="diff-bar" style="margin-top:1rem;">
+        <span class="diff-label">Difficulty</span>
+        <div class="diff-track"><div class="diff-fill" style="width:${lvl.difficulty/6*100}%; background:${lvl.difficulty<=2?'var(--green)':lvl.difficulty<=4?'var(--amber)':'var(--red)'}"></div></div>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);width:40px;text-align:right">${lvl.difficulty}/6</span>
+      </div>
+    </div>
+    <div class="detail-panel" data-panel="1">
+      <h3>Learning Objectives</h3>
+      <ul class="objective-list">${lvl.objectives.map(o=>`<li>${o}</li>`).join('')}</ul>
+    </div>
+    <div class="detail-panel" data-panel="2">
+      <h3>Core Financial Concepts</h3>
+      <ul class="concept-list">${lvl.concepts.map(c=>`<li>${c}</li>`).join('')}</ul>
+    </div>
+    <div class="detail-panel" data-panel="3">
+      <h3>Gameplay Challenges</h3>
+      <ul class="challenge-list">${lvl.challenges.map((c,i)=>`<li><strong>Step ${i+1}:</strong> ${c}</li>`).join('')}</ul>
+    </div>
+    <div class="detail-panel" data-panel="4">
+      <h3>Data Inputs</h3>
+      <table class="data-table">
+        <thead><tr><th>Data Field</th><th>Value / Specification</th></tr></thead>
+        <tbody>${lvl.dataInputs.map(d=>`<tr><td style="color:var(--muted)">${d.label}</td><td>${d.val}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>
+    <div class="detail-panel" data-panel="5">
+      <h3>Decision Points</h3>
+      <ul class="challenge-list">${lvl.decisions.map(d=>`<li>${d}</li>`).join('')}</ul>
+    </div>
+    <div class="detail-panel" data-panel="6">
+      <h3>Error Traps / Common Mistakes</h3>
+      <div class="callout danger"><div class="callout-label">Common Errors</div>
+      <ul style="margin-top:0.5rem;padding-left:1.25rem;">${lvl.errors.map(e=>`<li style="font-size:13px;margin-bottom:0.4rem;">${e}</li>`).join('')}</ul></div>
+    </div>
+    <div class="detail-panel" data-panel="7">
+      <h3>Completion Criteria</h3>
+      <ul class="objective-list">${lvl.criteria.map(c=>`<li>${c}</li>`).join('')}</ul>
+    </div>
+    <div class="detail-panel" data-panel="8">
+      <h3>Reward System</h3>
+      <div class="reward-grid">
+        <div class="reward-item"><span class="reward-icon">⚡</span><div class="reward-label">Base XP</div><div class="reward-value">${lvl.rewards.xp.toLocaleString()} XP</div></div>
+        <div class="reward-item"><span class="reward-icon">🏅</span><div class="reward-label">Badge</div><div class="reward-value" style="font-size:11px">${lvl.rewards.badge}</div></div>
+        <div class="reward-item" style="grid-column:span 2"><span class="reward-icon">🔓</span><div class="reward-label">Unlocks</div><div class="reward-value" style="font-size:11px">${lvl.rewards.unlock}</div></div>
+      </div>
+      <div class="callout success"><div class="callout-label">Performance Bonus</div>${lvl.rewards.bonus}</div>
+    </div>`;
+
+  det.querySelectorAll('.detail-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const idx = tab.dataset.tab;
+      det.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+      det.querySelectorAll('.detail-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      det.querySelector(`.detail-panel[data-panel="${idx}"]`).classList.add('active');
+    });
+  });
+
+  card.parentNode.insertBefore(det, card.nextSibling);
+}
+
+function renderScoring() {
+  const container = document.getElementById('scoringBars');
+  scoringComponents.forEach(s => {
+    const row = document.createElement('div');
+    row.innerHTML = `
+      <div class="score-row">
+        <div class="score-label">${s.label}</div>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:${s.pct*3}px; background:${s.color}"></div></div>
+        <div class="score-weight">${s.weight}</div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);padding:0 0 0.75rem 0;border-bottom:1px solid var(--border2)">${s.desc}</p>`;
+    container.appendChild(row);
+  });
+}
+
+function renderTiers() {
+  const track = document.getElementById('tierTrack');
+  const detCon = document.getElementById('tierDetailContainer');
+
+  tiers.forEach((tier, i) => {
+    const item = document.createElement('div');
+    item.className = 'tier-item' + (i===0?' active':'');
+    item.innerHTML = `<div class="tier-name" style="color:${tier.color}">${tier.name}</div><div class="tier-elo">Elo ${tier.elo}</div>`;
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.tier-item').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tier-detail-panel').forEach(p => p.classList.remove('active'));
+      item.classList.add('active');
+      document.querySelector(`.tier-detail-panel[data-tier="${i}"]`).classList.add('active');
+    });
+    track.appendChild(item);
+
+    const panel = document.createElement('div');
+    panel.className = 'tier-detail-panel' + (i===0?' active':'');
+    panel.dataset.tier = i;
+    panel.innerHTML = `
+      <div class="callout info" style="margin-top:1rem;">
+        <div class="callout-label" style="color:${tier.color}">${tier.name} Tier — Elo ${tier.elo}</div>
+        <table class="data-table" style="margin-top:0.5rem;">
+          <tr><td style="color:var(--muted);width:140px">Promotion Rule</td><td>${tier.promote}</td></tr>
+          <tr><td style="color:var(--muted)">Demotion Rule</td><td>${tier.demote}</td></tr>
+          <tr><td style="color:var(--muted)">Tier Perks</td><td>${tier.perks}</td></tr>
+        </table>
+      </div>`;
+    detCon.appendChild(panel);
+  });
+}
+
+function renderSandbox() {
+  const grid = document.getElementById('sandboxFeatures');
+  sandboxFeatures.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'feature-card';
+    card.innerHTML = `<span class="feature-icon">${f.icon}</span><div class="feature-name">${f.name}</div><p class="feature-desc">${f.desc}</p>${f.skills.map(s=>`<span class="skill-tag">${s}</span>`).join('')}`;
+    grid.appendChild(card);
+  });
+
+  const controls = document.getElementById('sandboxControls');
+  const controlData = [
+    {name: "Volatility Level", range: "0.5× – 3.0× baseline", desc: "Scale simulated market volatility. Lower settings allow study of 'clean' news reactions. Higher settings replicate crisis-like conditions with gap risk and spread spikes."},
+    {name: "Leverage", range: "1:1 – 1:500", desc: "Adjust simulated account leverage. Platform displays real-time margin utilization and liquidation price as leverage increases. Educational warnings triggered above 1:50."},
+    {name: "News Intensity", range: "Low / Medium / High / Extreme", desc: "Control the frequency and overlap of news events. 'Extreme' mode introduces simultaneous multi-event scenarios with conflicting signals. 'Low' mode isolates single clean releases."}
+  ];
+  controlData.forEach(c => {
+    controls.innerHTML += `<div class="score-row">
+      <div class="score-label">${c.name}</div>
+      <div style="flex:1;font-size:13px;color:var(--text)">${c.desc}</div>
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--amber);width:120px;text-align:right;flex-shrink:0">${c.range}</div>
+    </div>`;
+  });
+}
+
+function renderScenarios() {
+  const sel = document.getElementById('scenSelector');
+  const content = document.getElementById('scenContent');
+
+  scenarios.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'scen-btn' + (i===0?' active':'');
+    btn.textContent = s.title;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.scen-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.scenario-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelector(`.scenario-panel[data-scen="${i}"]`).classList.add('active');
+    });
+    sel.appendChild(btn);
+
+    const panel = document.createElement('div');
+    panel.className = 'scenario-panel' + (i===0?' active':'');
+    panel.dataset.scen = i;
+    panel.innerHTML = `
+      <div style="margin-bottom:1.5rem;">
+        <div class="doc-label">${s.subtitle}</div>
+        <h2 style="font-size:1.4rem;font-weight:normal;color:#fff;margin-bottom:0.25rem">${s.title}</h2>
+        <p style="color:var(--muted);font-family:var(--font-mono);font-size:11px">Event Basis: ${s.basis}</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+        <div>
+          <h3>Market Conditions</h3>
+          <table class="data-table">
+            <tr><td style="color:var(--muted)">Volatility</td><td>${s.conditions.volatility}</td></tr>
+            <tr><td style="color:var(--muted)">Sentiment</td><td>${s.conditions.sentiment}</td></tr>
+            <tr><td style="color:var(--muted)">Positioning</td><td>${s.conditions.positioning}</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3>News Release Data</h3>
+          <div class="market-data" style="padding:0.75rem;">
+            ${s.newsData.map(d=>`<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border2);font-family:var(--font-mono);font-size:12px"><span style="color:var(--muted)">${d.label}</span><span>${d.val}</span></div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <h3>Immediate Market Reaction</h3>
+      <div class="callout info"><div class="callout-label">Price Action</div>${s.reaction}</div>
+
+      <h3>Conflicting Signals</h3>
+      <ul class="challenge-list">${s.conflicts.map(c=>`<li>${c}</li>`).join('')}</ul>
+
+      <h3>Player Objective</h3>
+      <p>${s.objective}</p>
+
+      <h3>Decision Points</h3>
+      <ul class="objective-list">${s.decisions.map(d=>`<li>${d}</li>`).join('')}</ul>
+
+      <h3>Possible Outcomes</h3>
+      <div class="outcome-grid">${s.outcomes.map(o=>`
+        <div class="outcome-card" style="border-color:${o.color}22">
+          <div class="outcome-title" style="color:${o.color}">${o.title}</div>
+          <div class="outcome-desc">${o.desc}</div>
+        </div>`).join('')}</div>
+
+      <h3>Key Learning Outcome</h3>
+      <div class="callout success"><div class="callout-label">Core Lesson</div>${s.learning}</div>`;
+    content.appendChild(panel);
+  });
+}
+
+function initNav() {
+  document.querySelectorAll('.nav-tabs a').forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const target = link.dataset.section;
+      document.querySelectorAll('.nav-tabs a').forEach(l => l.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      link.classList.add('active');
+      document.getElementById(target).classList.add('active');
+    });
+  });
+}
+
+// INIT
+renderLevels();
+renderScoring();
+renderTiers();
+renderSandbox();
+renderScenarios();
+initNav();
+</script>
+</body>
+</html>
